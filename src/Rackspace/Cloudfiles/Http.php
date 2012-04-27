@@ -29,6 +29,7 @@ namespace Rackspace\Cloudfiles;
 
 use Rackspace\Exception\IOException;
 use Rackspace\Exception\SyntaxException;
+use Rackspace\Exception\ConnectionNotOpenException;
 
 define("PHP_CF_VERSION", "1.7.10");
 define("USER_AGENT", sprintf("PHP-CloudFiles/%s", PHP_CF_VERSION));
