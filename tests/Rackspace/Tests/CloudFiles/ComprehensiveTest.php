@@ -2,6 +2,9 @@
 
 namespace Rackspace\Tests\Cloudfiles;
 
+use Rackspace\Cloudfiles\Authentication;
+use Rackspace\Cloudfiles\Connection;
+
 require_once 'common.php';
 
 /**
@@ -12,26 +15,30 @@ require_once 'common.php';
 *
 * @return 	type	none
 */
-class Comprehensive extends \PHPUnit_Framework_TestCase
+class ComprehensiveTest extends \PHPUnit_Framework_TestCase
 {
-    function __construct() {
+    function __construct()
+    {
         $this->auth = null;
         $this->temp_name_write = tempnam(get_tmpdir(), "php-cloudfiles");
         $this->temp_name_read = tempnam(get_tmpdir(), "php-cloudfiles");
     }
-    function __destruct () {
+
+    function __destruct ()
+    {
         unlink($this->temp_name_write);
         unlink($this->temp_name_read);
     }
 
-    protected function setUp() {
-        $this->auth = new CF_Authentication(USER, API_KEY);
+    protected function setUp()
+    {
+        $this->auth = new Authentication(USER, API_KEY);
         $this->auth->authenticate();
-        $this->conn = new CF_Connection($this->auth);
+        $this->conn = new Connection($this->auth);
     }
 
-    protected function __create_big_file($size) {
-
+    protected function __create_big_file($size)
+    {
         // Check if we have enough free space, this is time two
         // because we are creating uploading and downloading which
         // after get compared.
@@ -53,7 +60,8 @@ class Comprehensive extends \PHPUnit_Framework_TestCase
         fclose($fp);
     }
 
-    public function test_big_file () {
+    public function test_big_file ()
+    {
         $fname = basename($this->temp_name_write);
 
         $this->__create_big_file(500 * 1024 * 1024);
@@ -81,7 +89,5 @@ class Comprehensive extends \PHPUnit_Framework_TestCase
 
         # Clean it
         $comp_cont->delete_object($fname);
-
     }
 }
-?>

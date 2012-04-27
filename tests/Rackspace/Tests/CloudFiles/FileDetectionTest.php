@@ -2,6 +2,9 @@
 
 namespace Rackspace\Tests\Cloudfiles;
 
+use Rackspace\Cloudfiles\Authentication;
+use Rackspace\Cloudfiles\Connection;
+
 require_once 'common.php';
 
 /**
@@ -9,7 +12,7 @@ require_once 'common.php';
    *
    * @package php-cloudfiles::tests
    */
-class FileDetection extends \PHPUnit_Framework_TestCase
+class FileDetectionTest extends \PHPUnit_Framework_TestCase
 {
     public function __construct()
     {
@@ -27,10 +30,10 @@ class FileDetection extends \PHPUnit_Framework_TestCase
         $this->utf8_text = $UTF8_TEXT;
 
         #Connect!
-        $this->auth = new CF_Authentication(USER, API_KEY);
+        $this->auth = new Authentication(USER, API_KEY);
         $this->auth->authenticate();
 
-        $this->conn = new CF_Connection($this->auth);
+        $this->conn = new Connection($this->auth);
 
         #Make sure it's deleted at the end
         $this->container = $this->conn->create_container("file-detection");
@@ -44,7 +47,8 @@ class FileDetection extends \PHPUnit_Framework_TestCase
             );
     }
 
-    public function test_filetype_detection_buffers () {
+    public function test_filetype_detection_buffers ()
+    {
         foreach ($this->media_files as $mime) {
             list($type, $mimetype, $binary_pack) = $mime;
 
@@ -64,7 +68,8 @@ class FileDetection extends \PHPUnit_Framework_TestCase
         }
     }
 
-    public function test_filetype_detection_files () {
+    public function test_filetype_detection_files ()
+    {
         foreach ($this->media_files as $mime) {
             list($type, $mimetype, $binary_pack) = $mime;
 
@@ -92,10 +97,10 @@ class FileDetection extends \PHPUnit_Framework_TestCase
         }
     }
 
-    /*
-      If set application/octet-stream it should not throw
-      BadContentTypeException
-    */
+    /**
+     * If set application/octet-stream it should not throw
+     * Rackspace\Exception\BadContentTypeException
+     */
     public function test_set_application_octet_stream ()
     {
         #CREATE
@@ -116,9 +121,9 @@ class FileDetection extends \PHPUnit_Framework_TestCase
     }
 
 
-    /*
-      If set with another content type than supposed to be it should not auto detect it
-    */
+    /**
+     * If set with another content type than supposed to be it should not auto detect it
+     */
     public function test_set_wrong_content_type ()
     {
         #CREATE
@@ -142,12 +147,13 @@ class FileDetection extends \PHPUnit_Framework_TestCase
 
     public function test_bad_content_type ()
     {
-        $this->setExpectedException('BadContentTypeException');
+        $this->setExpectedException('Rackspace\\Exception\\BadContentTypeException');
         $o2 = $this->container->create_object("bad-content-type");
         $o2->write(pack("n*", 0xf00f, 0xdead, 0xbeef, 0x0100, 0x0ff0));
     }
 
-    public function test_delete_main_container () {
+    public function test_delete_main_container ()
+    {
         $result = $this->conn->delete_container("file-detection");
         $this->assertTrue($result);
     }

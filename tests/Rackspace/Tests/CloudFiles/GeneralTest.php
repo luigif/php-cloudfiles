@@ -2,6 +2,9 @@
 
 namespace Rackspace\Tests\Cloudfiles;
 
+use Rackspace\Cloudfiles\Authentication;
+use Rackspace\Cloudfiles\Connection;
+
 require_once 'common.php';
 
 class CloudFileAccountInfoTest extends \PHPUnit_Framework_TestCase
@@ -20,9 +23,9 @@ class CloudFileAccountInfoTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->auth = new CF_Authentication(USER, API_KEY);
+        $this->auth = new Authentication(USER, API_KEY);
         $this->auth->authenticate();
-        $this->conn = new CF_Connection($this->auth);
+        $this->conn = new Connection($this->auth);
         #We will need it all of those
         $this->conn->set_read_progress_function("read_callback_test");
         $this->conn->set_write_progress_function("write_callback_test");
@@ -42,7 +45,7 @@ class CloudFileAccountInfoTest extends \PHPUnit_Framework_TestCase
     public function testCreateLongContainer()
     {
         //Long names are not permitted
-        $this->setExpectedException('SyntaxException');
+        $this->setExpectedException('Rackspace\\Exception\\SyntaxException');
 
         $long_name = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
         $long_name .= "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -54,7 +57,7 @@ class CloudFileAccountInfoTest extends \PHPUnit_Framework_TestCase
 
     public function testCreateEmptyContainer()
     {
-        $this->setExpectedException('SyntaxException');
+        $this->setExpectedException('Rackspace\\Exception\\SyntaxException');
         $container = $this->conn->create_container();
     }
 
@@ -84,7 +87,7 @@ class CloudFileAccountInfoTest extends \PHPUnit_Framework_TestCase
 
     public function testCreateLongObject()
     {
-        $this->setExpectedException('SyntaxException');
+        $this->setExpectedException('Rackspace\\Exception\\SyntaxException');
 
         $long_name = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
         $long_name .= "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -113,31 +116,31 @@ class CloudFileAccountInfoTest extends \PHPUnit_Framework_TestCase
     public function testNonExistentContainer()
     {
         //Long names are not permitted
-        $this->setExpectedException('NoSuchContainerException');
+        $this->setExpectedException('Rackspace\\Exception\\NoSuchContainerException');
         $no_container = $this->conn->get_container("7HER3_1S_N0_5PO0N");
     }
 
     public function testDeleteNonExistentContainer()
     {
-        $this->setExpectedException('NoSuchContainerException');
+        $this->setExpectedException('Rackspace\\Exception\\NoSuchContainerException');
         $no_container = $this->conn->delete_container("7HER3_1S_N0_5PO0N");
     }
 
     public function testDeleteNonSpecifiedContainer()
     {
-        $this->setExpectedException('SyntaxException');
+        $this->setExpectedException('Rackspace\\Exception\\SyntaxException');
         $result = $this->conn->delete_container();
     }
 
     public function testDeleteNonExistentObject()
     {
-        $this->setExpectedException('NoSuchObjectException');
+        $this->setExpectedException('Rackspace\\Exception\\NoSuchObjectException');
         $result = $this->container->delete_object("7HER3_1S_N0_5PO0N");
     }
 
     public function testCreateContainerWithASlash()
     {
-        $this->setExpectedException('SyntaxException');
+        $this->setExpectedException('Rackspace\\Exception\\SyntaxException');
         $bad_cont = $this->conn->create_container("php/cloudfiles");
     }
 
@@ -366,7 +369,7 @@ class CloudFileAccountInfoTest extends \PHPUnit_Framework_TestCase
 
     public function testNonEmptyContainerDelete ()
     {
-        $this->setExpectedException('NonEmptyContainerException');
+        $this->setExpectedException('Rackspace\\Exception\\NonEmptyContainerException');
         $this->conn->delete_container($this->container);
     }
 
@@ -533,7 +536,7 @@ class CloudFileAccountInfoTest extends \PHPUnit_Framework_TestCase
     }
 
     public function test_wrong_etag() {
-        $this->setExpectedException('MisMatchedChecksumException');
+        $this->setExpectedException('Rackspace\\Exception\\MisMatchedChecksumException');
 
         $fname = $this->temp_name;
         $f = fopen($fname,"w");
@@ -546,7 +549,7 @@ class CloudFileAccountInfoTest extends \PHPUnit_Framework_TestCase
     }
 
 	public function test_close() {
-        $this->setExpectedException('ConnectionNotOpenException');
+        $this->setExpectedException('Rackspace\\Exception\\ConnectionNotOpenException');
 
         $this->conn->list_containers(); // Open a connection.
 		$this->conn->close();

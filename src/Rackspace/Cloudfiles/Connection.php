@@ -178,7 +178,7 @@ class Connection
      * </code>
      *
      * @param string $container_name container name
-     * @return Connection
+     * @return Container
      * @throws SyntaxException invalid name
      * @throws InvalidResponseException unexpected response
      */
@@ -214,7 +214,7 @@ class Connection
                 "Invalid response (".$return_code."): "
                     . $this->cfs_http->get_error());
         }
-        return new Connection($this->cfs_auth, $this->cfs_http, $container_name);
+        return new Container($this->cfs_auth, $this->cfs_http, $container_name);
     }
 
     /**
@@ -244,7 +244,7 @@ class Connection
         $container_name = NULL;
 
         if (is_object($container)) {
-            if (get_class($container) == "Rackspace\\Cloudfiles\\Connection") {
+            if (get_class($container) == "Rackspace\\Cloudfiles\\Container") {
                 $container_name = $container->name;
             }
         }
@@ -297,7 +297,7 @@ class Connection
      * </code>
      *
      * @param string $container_name name of the remote Container
-     * @return container Connection instance
+     * @return container Container instance
      * @throws NoSuchContainerException thrown if no remote Container
      * @throws InvalidResponseException unexpected response
      */
@@ -315,14 +315,14 @@ class Connection
             throw new InvalidResponseException(
                 "Invalid response: ".$this->cfs_http->get_error());
         }
-        return new Connection($this->cfs_auth, $this->cfs_http,
+        return new Container($this->cfs_auth, $this->cfs_http,
             $container_name, $count, $bytes);
     }
 
     /**
      * Return array of Container instances
      *
-     * Return an array of Connection instances on the account.  The instances
+     * Return an array of Container instances on the account.  The instances
      * will be fully populated with Container attributes (bytes stored and
      * Object count)
      *
@@ -340,7 +340,7 @@ class Connection
      * }
      * </code>
      *
-     * @return array An array of Connection instances
+     * @return array An array of Container instances
      * @throws InvalidResponseException unexpected response
      */
     function get_containers($limit=0, $marker=NULL)
@@ -356,7 +356,7 @@ class Connection
         }
         $containers = array();
         foreach ($container_info as $name => $info) {
-            $containers[] = new Connection($this->cfs_auth, $this->cfs_http,
+            $containers[] = new Container($this->cfs_auth, $this->cfs_http,
                 $info['name'], $info["count"], $info["bytes"], False);
         }
         return $containers;

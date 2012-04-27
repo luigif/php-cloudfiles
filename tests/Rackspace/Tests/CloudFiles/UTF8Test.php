@@ -2,6 +2,9 @@
 
 namespace Rackspace\Tests\Cloudfiles;
 
+use Rackspace\Cloudfiles\Authentication;
+use Rackspace\Cloudfiles\Connection;
+
 require_once 'common.php';
 
 /**
@@ -23,10 +26,10 @@ class UTF8 extends \PHPUnit_Framework_TestCase
         $this->utf8_text = $UTF8_TEXT;
 
         #Connect!
-        $this->auth = new CF_Authentication(USER, API_KEY);
+        $this->auth = new Authentication(USER, API_KEY);
         $this->auth->authenticate();
 
-        $this->conn = new CF_Connection($this->auth);
+        $this->conn = new Connection($this->auth);
 
         #Make sure it's deleted at the end
         $this->container = $this->conn->create_container("utf-8");
@@ -50,7 +53,7 @@ class UTF8 extends \PHPUnit_Framework_TestCase
     {
         foreach ($this->utf8_names as $name) {
             $container = $this->conn->create_container($name);
-            $this->assertEquals(get_class($container), "CF_Container");
+            $this->assertEquals(get_class($container), "Rackspace\\Cloudfiles\\Container");
             $this->assertEquals($container->name, $name);
         }
 
@@ -79,7 +82,7 @@ class UTF8 extends \PHPUnit_Framework_TestCase
             $object->content_type = "text/plain";
             $result = $object->write($text);
             $this->assertTrue($result);
-            $this->assertEquals(get_class($object), "CF_Object");
+            $this->assertEquals(get_class($object), "Rackspace\\Cloudfiles\\Object");
             $this->assertEquals($object->name, $name);
         }
 
