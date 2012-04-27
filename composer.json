@@ -1,0 +1,23 @@
+{
+    "name": "rackspace/cloudfiles",
+    "type": "http",
+    "description": "cloudfiles interface library",
+    "keywords": ["rackspace", "cloudfiles", "http", "client"],
+    "homepage": "http://www.rackspace.com/",
+    "authors": [
+        {
+            "name": "Claudio Beatrice",
+            "email": "claudio@agavee.com"
+        },
+        {
+            "name": "Marco Vito Moscaritolo",
+            "email": "marco@agavee.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.2"
+    },
+    "autoload": {
+        "psr-0" : { "Rackspace": "src/" }
+    }
+}

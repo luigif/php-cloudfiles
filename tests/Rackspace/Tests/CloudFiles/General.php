@@ -1,8 +1,10 @@
 <?php # -*- compile-command: (concat "phpunit " buffer-file-name) -*-
-require_once 'PHPUnit/Framework.php';
+
+namespace Rackspace\Tests\Cloudfiles;
+
 require_once 'common.php';
 
-class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
+class CloudFileAccountInfoTest extends \PHPUnit_Framework_TestCase
 {
     function __construct()
     {
@@ -15,7 +17,7 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
    function __destruct() {
        unlink($this->temp_name);
    }
-    
+
     protected function setUp()
     {
         $this->auth = new CF_Authentication(USER, API_KEY);
@@ -28,11 +30,11 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
         $this->orig_container_list = $this->conn->list_containers();
 
         $this->container = $this->conn->create_container("php-cloudfiles");
-        $this->o1 = $this->container->create_object("fuzzy.txt");        
-    } 
+        $this->o1 = $this->container->create_object("fuzzy.txt");
+    }
 
     public function testListContainers()
-    {        
+    {
         $this->assertTrue(is_array($this->orig_info));
         $this->assertTrue(is_array($this->orig_container_list));
     }
@@ -41,7 +43,7 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
     {
         //Long names are not permitted
         $this->setExpectedException('SyntaxException');
-        
+
         $long_name = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
         $long_name .= "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
         $long_name .= "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -62,7 +64,7 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
         $result = $this->conn->delete_container('0');
         $this->assertNotNull($container);
     }
-    
+
     public function testCreateContainer()
     {
         $this->assertNotNull($this->container);
@@ -71,19 +73,19 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
     public function testCreateContainerWithSpace()
     {
         $container = $this->conn->create_container('php cloudfiles');
-        $this->assertNotNull($container);        
+        $this->assertNotNull($container);
     }
 
     public function testDeleteContainerWithSpace()
     {
         $result = $this->conn->delete_container('php cloudfiles');
-        $this->assertNotNull($result);        
+        $this->assertNotNull($result);
     }
 
     public function testCreateLongObject()
     {
         $this->setExpectedException('SyntaxException');
-        
+
         $long_name = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
         $long_name .= "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
         $long_name .= "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -107,7 +109,7 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
 
         $this->container->create_object($long_name);
     }
-    
+
     public function testNonExistentContainer()
     {
         //Long names are not permitted
@@ -132,10 +134,10 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
         $this->setExpectedException('NoSuchObjectException');
         $result = $this->container->delete_object("7HER3_1S_N0_5PO0N");
     }
-    
+
     public function testCreateContainerWithASlash()
     {
-        $this->setExpectedException('SyntaxException');        
+        $this->setExpectedException('SyntaxException');
         $bad_cont = $this->conn->create_container("php/cloudfiles");
     }
 
@@ -151,9 +153,9 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
         }
         $this->assertTrue($cont_name_check);
     }
-    
+
     public function testManifestObject ()
-    { 
+    {
         $o0 = $this->container->create_object("manifest");
         $o0->manifest = $this->container->name . "/manifest";
         $result = $o0->write();
@@ -163,7 +165,7 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
     }
 
     public function testObjectWithSlash ()
-    { 
+    {
         $o0 = $this->container->create_object("test/slash");
         $this->assertNotNull($o0);
 
@@ -174,9 +176,9 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
         $this->assertNotNull($result);
         $this->assertNotNull($o0->getETag() == $md5);
     }
-    
+
     public function testObjectWithSpace ()
-    { 
+    {
         $ospace = $this->container->create_object("space name");
         $this->assertNotNull($ospace);
 
@@ -186,11 +188,11 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
         $result = $ospace->write($text);
 
         $this->assertNotNull($ospace);
-        $this->assertNotNull($ospace->getETag() == $md5);        
+        $this->assertNotNull($ospace->getETag() == $md5);
     }
 
     public function testRange ()
-    { 
+    {
         $orange = $this->container->get_object("space name");
         $partial = $orange->read(array("Range"=>"bytes=0-10"));
 
@@ -199,7 +201,7 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
 
         //Check last modified
         $this->assertTrue(substr($orange->last_modified, -3) == "GMT");
-        
+
     }
 
     public function testCreateObjectTwo()
@@ -213,13 +215,13 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
         $o1->content_type = "text/plain";
         $result = $o1->write($text);
 
-        $this->assertNotNull($result);        
+        $this->assertNotNull($result);
         $this->assertTrue($o1->getETag() == $md5);
 
         // ======= UPLOAD STRING CONTENT FOR OBJECT(2) =================
         $o1->content_type = "text/plain";
         $result = $o1->write("Even more sample text.");
-        $this->assertNotNull($result);        
+        $this->assertNotNull($result);
 
         // ======= RE-UPLOAD STRING CONTENT FOR OBJECT WITH METADATA ===
         $text = "This is some different sample text.";
@@ -270,7 +272,7 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
     }
 
     public function testUploadObjectFromFile ()
-    { 
+    {
         $fname = basename(__FILE__);
         if (!file_exists("$fname"))
             $fname = "tests/$fname";
@@ -283,13 +285,13 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
     }
 
     public function testGetContainner ()
-    { 
+    {
         $cont2 = $this->conn->get_container("php-cloudfiles");
         $this->assertNotNull($cont2);
     }
 
     public function testObjectMetadata ()
-    { 
+    {
         $o3 = $this->container->get_object("fuzzy.txt");
         $this->assertTrue($o3->getETag() == $this->o1->getETag());
 
@@ -307,7 +309,7 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
 
     # ======= CREATE OBJECT =======================================
     public function testUploadStringContentForObject ()
-    { 
+    {
         $o5 = $this->container->create_object("fussy.txt");
         $this->assertNotNull($o5);
 
@@ -321,7 +323,7 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
     }
 
     public function testDownloadObject ()
-    { 
+    {
         $o4 = $this->container->get_object("fuzzy.txt");
         $result = $o4->save_to_filename($this->temp_name);
         $this->assertNotNull($result);
@@ -331,45 +333,45 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
         $this->assertTrue(strlen($data) == 35);
     }
 
-    public function testListAllObjects () { 
+    public function testListAllObjects () {
         $obj_list = $this->container->list_objects();
         $this->assertTrue(is_array($obj_list) && !empty($obj_list));
     }
 
     # ======= CHECK ACCOUNT INFO ==================================
-    public function testCheckAccountInfo () { 
+    public function testCheckAccountInfo () {
         list($num_containers, $total_bytes) = $this->conn->get_info();
         $this->assertTrue($num_containers >= 1);
         $this->assertTrue($total_bytes >= 7478);
    }
 
     # ======= FIND OBJECTS (LIMIT) ================================
-    public function testFindObjectLimit () { 
+    public function testFindObjectLimit () {
         $obj_list = $this->container->list_objects(1);
         $this->assertTrue(is_array($obj_list) && !empty($obj_list));
     }
 
     # ======= FIND OBJECTS (LIMIT,OFFSET) =========================
-    public function testFindObjectLimitOffest () { 
+    public function testFindObjectLimitOffest () {
         $obj_list = $this->container->list_objects(1,1);
         $this->assertTrue(is_array($obj_list) && !empty($obj_list));
     }
 
     # ======= FIND OBJECTS (PREFIX='fu') ==========================
     public function findObjectPrefix ()
-    { 
+    {
         $obj_list = $this->container->list_objects(0,-1,"fu");
         $this->assertTrue(is_array($obj_list) && !empty($obj_list));
     }
 
     public function testNonEmptyContainerDelete ()
-    { 
+    {
         $this->setExpectedException('NonEmptyContainerException');
-        $this->conn->delete_container($this->container);        
+        $this->conn->delete_container($this->container);
     }
 
     public function testDeleteAllObjectsAndContainner ()
-    { 
+    {
         $obj_list = $this->container->list_objects();
         foreach ($obj_list as $obj) {
             $result = $this->container->delete_object($obj);
@@ -381,10 +383,10 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
 
         $result = $this->conn->delete_container($this->container);
         $this->assertNotNull($result);
-        
+
     }
 
-    public function testCDN () { 
+    public function testCDN () {
         # ======= CHECK ACCOUNT INFO BEFORE CDN TESTS =================
         $cnames = array();
         $cdn_info = $this->conn->get_info();
@@ -416,7 +418,7 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
         $utf8_cont = $this->conn->create_container($n3);
         $cnames[$n3] = $utf8_cont;
         $this->assertNotNull( $utf8_cont );
-        
+
 
         # Test CDN-enabling each container for an hour
         #
@@ -428,8 +430,8 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
 
         # ======= TEST CONTAINER ATTRIBUTES ===========================
         foreach ($cnames as $name => $cont) {
-            $tcont = $this->conn->get_container($name);    
-            
+            $tcont = $this->conn->get_container($name);
+
             $this->assertNotNull($tcont->is_public());
             $this->assertNotNull($tcont->name == $name);
             $this->assertNotNull($tcont->cdn_uri == $cont->cdn_uri);
@@ -441,14 +443,14 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
         foreach ($cnames as $name => $cont) {
             $uri = $cont->make_public(7200);
             $this->assertNotNull($cont->is_public());
-            
+
         }
 
         # ======= TEST CONTAINER ATTRIBUTES ===========================
         foreach ($cnames as $name => $cont) {
-            $tcont = $this->conn->get_container($name);    
-            
-            
+            $tcont = $this->conn->get_container($name);
+
+
             $this->assertNotNull($tcont->is_public());
             $this->assertNotNull($tcont->name == $name);
             $this->assertNotNull($tcont->cdn_uri == $cont->cdn_uri);
@@ -462,7 +464,7 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
         $o->content_type = "text/plain";
         $o->write($contents);
         sleep(2);
-        
+
         $fp = fopen($o->public_uri(), "r");
         $cdn_contents = fread($fp, 1024);
         fclose($fp);
@@ -473,7 +475,7 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
         foreach ($cnames as $name => $cont) {
             $cont->log_retention(True);
             $cont->acl_referrer("http://www.example.com");
-            $cont->acl_user_agent("Mozilla");            
+            $cont->acl_user_agent("Mozilla");
 
             /* Make sure set on the fly */
             $this->assertTrue($cont->cdn_log_retention);
@@ -481,18 +483,18 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
             $this->assertEquals($cont->cdn_acl_user_agent, "Mozilla");
 
             /* Make sure set on the server */
-            $cont_msure = $this->conn->get_container($name);            
+            $cont_msure = $this->conn->get_container($name);
             $this->assertTrue($cont_msure->cdn_log_retention);
             $this->assertEquals($cont_msure->cdn_acl_referrer, "http://www.example.com");
             $this->assertEquals($cont_msure->cdn_acl_user_agent, "Mozilla");
-            
+
         }
-                   
+
         # ======= DISABLE CDN =========================================
         foreach ($cnames as $name => $cont) {
             $uri = $cont->make_private();
             $this->assertNotNull($cont->is_public() == False);
-            
+
             $tcont = $this->conn->get_container($name);
             $this->assertNotNull($cont->is_public() == False);
         }
@@ -511,14 +513,14 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
     public function test_cached_stats() {
         $fname = $this->temp_name;
         $bname = basename($this->temp_name);
-        
+
         $f = fopen($fname,"w");
         fclose($f);
 
         $o2 = $this->container->create_object($bname);
         $o2->content_type = "text/plain";
         $result = $o2->load_from_filename($fname);
-        
+
         $f = fopen($fname,"a");
         fputs($f,"x");
         fclose($f);
@@ -532,25 +534,25 @@ class CloudFileAccountInfoTest extends PHPUnit_Framework_TestCase
 
     public function test_wrong_etag() {
         $this->setExpectedException('MisMatchedChecksumException');
-        
+
         $fname = $this->temp_name;
         $f = fopen($fname,"w");
         fclose($f);
-        
+
         $o1 = $this->container->create_object("wrong_etag.txt");
         $o1->content_type = "text/plain";
         $o1->set_etag("ffffffffffffffffffffffff");
         $result = $o1->load_from_filename($fname, $verify = True);
     }
-	
+
 	public function test_close() {
         $this->setExpectedException('ConnectionNotOpenException');
 
         $this->conn->list_containers(); // Open a connection.
 		$this->conn->close();
 		$this->conn->list_containers(); // Open a connection.
-	}    
-    
+	}
+
 }
 
 ?>

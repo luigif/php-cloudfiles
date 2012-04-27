@@ -1,11 +1,11 @@
 <?php
+
 if (empty($_ENV)) {
     $_ENV = $_SERVER;
 }
 
 require_once 'cloudfiles_ini.php';
 set_include_path(get_include_path() . PATH_SEPARATOR . "../");
-require_once 'cloudfiles.php';
 
 error_reporting(E_ALL);
 
@@ -85,7 +85,7 @@ function random_utf8_string($length_string, $utf8_array)
 }
 
 # Some real world UTF8-TEXT
-$UTF8_TEXT = 
+$UTF8_TEXT =
        array("greek" =>
               "
   Σὲ γνωρίζω ἀπὸ τὴν κόψη
@@ -107,7 +107,7 @@ $UTF8_TEXT =
 ოპერაციულ სისტემებსა, და გამოყენებით პროგრამებში, შრიფტებში,
 ტექსტების დამუშავებასა და მრავალენოვან კომპიუტერულ სისტემებში.
 ",
-                          
+
                           "thai" => "
  ๏ แผ่นดินฮั่นเสื่อมโทรมแสนสังเวช  พระปกเกศกองบู๊กู้ขึ้นใหม่
   สิบสองกษัตริย์ก่อนหน้าแลถัดไป       สององค์ไซร้โง่เขลาเบาปัญญา
@@ -184,9 +184,7 @@ function get_tmpdir() {
         return realpath( $_ENV['TEMP']);
 
     $tempfile=tempnam(uniqid(rand(),TRUE),'');
-    if (file_exists($tempfile)) 
+    if (file_exists($tempfile))
         unlink($tempfile);
     return realpath(dirname($tempfile));
 }
-
-?>

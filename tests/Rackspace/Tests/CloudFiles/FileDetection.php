@@ -1,5 +1,7 @@
 <?php # -*- compile-command: (concat "phpunit " buffer-file-name) -*-
-require_once 'PHPUnit/Framework.php';
+
+namespace Rackspace\Tests\Cloudfiles;
+
 require_once 'common.php';
 
 /**
@@ -7,13 +9,13 @@ require_once 'common.php';
    *
    * @package php-cloudfiles::tests
    */
-class FileDetection extends PHPUnit_Framework_TestCase
+class FileDetection extends \PHPUnit_Framework_TestCase
 {
     public function __construct()
     {
         $this->auth = null;
     }
-    
+
     public function setUp()
     {
 
@@ -23,13 +25,13 @@ class FileDetection extends PHPUnit_Framework_TestCase
         }
         global $UTF8_TEXT;
         $this->utf8_text = $UTF8_TEXT;
-        
+
         #Connect!
         $this->auth = new CF_Authentication(USER, API_KEY);
         $this->auth->authenticate();
-        
+
         $this->conn = new CF_Connection($this->auth);
-        
+
         #Make sure it's deleted at the end
         $this->container = $this->conn->create_container("file-detection");
 
@@ -42,30 +44,30 @@ class FileDetection extends PHPUnit_Framework_TestCase
             );
     }
 
-    public function test_filetype_detection_buffers () { 
-        foreach ($this->media_files as $mime) {        
+    public function test_filetype_detection_buffers () {
+        foreach ($this->media_files as $mime) {
             list($type, $mimetype, $binary_pack) = $mime;
-            
+
             # Write Object
             $object = $this->container->create_object("sample." . $type);
             $object->write(call_user_func_array("pack",array_merge(array("n*"),(array)$binary_pack)));
-            
+
             # Get the OBJECT
             $object = $this->container->get_object("sample." . $type);
 
             # Test it
             $this->assertEquals($object->content_type, $mimetype);
-            
+
             # Delete the OBJECT
             $object = $this->container->delete_object("sample." . $type);
-            
+
         }
     }
 
-    public function test_filetype_detection_files () { 
-        foreach ($this->media_files as $mime) {        
+    public function test_filetype_detection_files () {
+        foreach ($this->media_files as $mime) {
             list($type, $mimetype, $binary_pack) = $mime;
-            
+
             # Write Object
             $object = $this->container->create_object("sample." . $type);
 
@@ -75,7 +77,7 @@ class FileDetection extends PHPUnit_Framework_TestCase
             fwrite($temp_fh,
                    call_user_func_array("pack",array_merge(array("n*"),(array)$binary_pack)));
             fclose($temp_fh);
-            
+
             $object->load_from_filename($temp);
 
             # Get the OBJECT
@@ -83,7 +85,7 @@ class FileDetection extends PHPUnit_Framework_TestCase
 
             # Test it
             $this->assertEquals($object->content_type, $mimetype);
-            
+
             # Delete OBJECT
             $object = $this->container->delete_object("sample." . $type);
             unlink($temp);
@@ -102,7 +104,7 @@ class FileDetection extends PHPUnit_Framework_TestCase
         #PUT
         $o->content_type = "application/octet-stream";
         $o->write(pack("n*", 0x4944, 0x3303, 0x0000, 0x0000, 0x0f76, 0x5450, 0x4531, 0x0000, 0x000d)); #MP3
-        
+
         #GET
         $o = $this->container->get_object("ct.mp3");
 
@@ -112,7 +114,7 @@ class FileDetection extends PHPUnit_Framework_TestCase
         #CLEAN
         $this->container->delete_object("ct.mp3");
     }
-    
+
 
     /*
       If set with another content type than supposed to be it should not auto detect it
@@ -125,7 +127,7 @@ class FileDetection extends PHPUnit_Framework_TestCase
         #PUT
         $o->content_type = "video/mp4"; #it should be image/jpeg but if the user really want to set as MP4 it's his problem
         $o->write(pack("n*", 0x0000, 0x001c, 0x6674, 0x7970, 0x6d70, 0x3432, 0x0000, 0x0000, 0x6973)); #JPG
-        
+
         #GET
         $o = $this->container->get_object("ct.mp4");
 
@@ -135,18 +137,18 @@ class FileDetection extends PHPUnit_Framework_TestCase
         #CLEAN
         $this->container->delete_object("ct.mp4");
     }
-    
+
 
 
     public function test_bad_content_type ()
-    { 
+    {
         $this->setExpectedException('BadContentTypeException');
         $o2 = $this->container->create_object("bad-content-type");
         $o2->write(pack("n*", 0xf00f, 0xdead, 0xbeef, 0x0100, 0x0ff0));
     }
-    
-    public function test_delete_main_container () { 
+
+    public function test_delete_main_container () {
         $result = $this->conn->delete_container("file-detection");
-        $this->assertTrue($result);        
+        $this->assertTrue($result);
     }
 }
