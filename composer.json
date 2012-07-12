@@ -15,7 +15,8 @@
         }
     ],
     "require": {
-        "php": ">=5.3.2"
+        "php": ">=5.3.2",
+        "agavee/toolbox": "0.1.2"
     },
     "autoload": {
         "psr-0" : { "Rackspace": "src/" }
