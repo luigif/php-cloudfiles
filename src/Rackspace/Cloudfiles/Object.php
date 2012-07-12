@@ -2,13 +2,14 @@
 
 namespace Rackspace\Cloudfiles;
 
+use Rackspace\Exception\MisMatchedChecksumException;
 use Rackspace\Exception\InvalidResponseException;
 use Rackspace\Exception\NoSuchContainerException;
 use Rackspace\Exception\BadContentTypeException;
-use Rackspace\Exception\SyntaxException;
-use Rackspace\Exception\MisMatchedChecksumException;
-use Rackspace\Exception\IOException;
 use Rackspace\Exception\CDNNotEnabledException;
+use Rackspace\Exception\NoSuchObjectException;
+use Rackspace\Exception\SyntaxException;
+use Rackspace\Exception\IOException;
 
 require_once 'config.php';
 
