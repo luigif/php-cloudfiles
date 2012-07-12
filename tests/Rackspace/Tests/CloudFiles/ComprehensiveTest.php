@@ -60,7 +60,7 @@ class ComprehensiveTest extends \PHPUnit_Framework_TestCase
         fclose($fp);
     }
 
-    public function test_big_file ()
+    public function test_big_file()
     {
         $fname = basename($this->temp_name_write);
 

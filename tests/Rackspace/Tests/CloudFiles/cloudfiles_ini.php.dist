@@ -1,7 +1,8 @@
 <?php
+
 $VERBOSE = False;                       # informational messages to stdout
 $USER    = "";                          # Rackspace Cloud Username
-$API_KEY = "";				# Rackspace Cloud API Key
+$API_KEY = "";                          # Rackspace Cloud API Key
 $ACCOUNT = NULL;                        # account name
 $HOST    = NULL;                        # authentication host URL
 

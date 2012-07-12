@@ -44,7 +44,7 @@ class FileDetectionTest extends \PHPUnit_Framework_TestCase
             array("mp4", "video/mp4", array(0x0000, 0x001c, 0x6674, 0x7970, 0x6d70, 0x3432, 0x0000, 0x0000, 0x6973)),
             array("avi", "video/x-msvideo", array(0x5249, 0x4646, 0x6a42, 0x0100, 0x4156, 0x4920, 0x4c49, 0x5354, 0x8c05)),
             array("ogg", "application/ogg", array(0x4f67, 0x6753, 0x0002, 0x0000, 0x0000, 0x0000, 0x0000, 0x5d28, 0xf95e)),
-            );
+        );
     }
 
     public function test_filetype_detection_buffers ()
