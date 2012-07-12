@@ -161,7 +161,7 @@ class CloudFileAccountInfoTest extends \PHPUnit_Framework_TestCase
     {
         $o0 = $this->container->create_object("manifest");
         $o0->manifest = $this->container->name . "/manifest";
-        $result = $o0->write();
+        $result = $o0->write("");
         $this->assertNotNull($result);
         $o0 = $this->container->get_object("manifest");
         $this->assertTrue($o0->manifest == $this->container->name . "/manifest");
@@ -271,16 +271,16 @@ class CloudFileAccountInfoTest extends \PHPUnit_Framework_TestCase
         $ifmatch = $this->container->get_object($o1->name);
         $ifdata = $ifmatch->read(array("If-Unmodified-Since" => httpDate(time()+86400)));
         $this->assertTrue($ifdata == $text);
-
     }
 
     public function testUploadObjectFromFile ()
     {
-        $fname = basename(__FILE__);
-        if (!file_exists("$fname"))
-            $fname = "tests/$fname";
+        $fname = __FILE__;
+        if (!file_exists("$fname")) {
+            $this->fail("Cannot find $fname");
+        }
         $md5 = md5_file($fname);
-        $o2 = $this->container->create_object($fname);
+        $o2 = $this->container->create_object(basename($fname));
         $o2->content_type = "text/plain";
         $result = $o2->load_from_filename($fname);
         $this->assertNotNull($result);
@@ -548,14 +548,12 @@ class CloudFileAccountInfoTest extends \PHPUnit_Framework_TestCase
         $result = $o1->load_from_filename($fname, $verify = True);
     }
 
-	public function test_close() {
+    public function test_close()
+    {
         $this->setExpectedException('Rackspace\\Exception\\ConnectionNotOpenException');
 
         $this->conn->list_containers(); // Open a connection.
-		$this->conn->close();
-		$this->conn->list_containers(); // Open a connection.
-	}
-
+        $this->conn->close();
+        $this->conn->list_containers(); // Open a connection.
+    }
 }
-
-?>
