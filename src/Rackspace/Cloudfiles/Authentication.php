@@ -2,12 +2,13 @@
 
 namespace Rackspace\Cloudfiles;
 
+use Rackspace\Cloudfiles\Authentication\Config as AuthenticationConfig;
+use Rackspace\Cloudfiles\Http\Config as HttpConfig;
 use Rackspace\Cloudfiles\Http;
+
 use Rackspace\Exception\AuthenticationException;
 use Rackspace\Exception\InvalidResponseException;
 use Rackspace\Exception\SyntaxException;
-
-require_once 'config.php';
 
 /**
  * Class for handling Cloud Files Authentication, call it's {@link authenticate()}
@@ -22,9 +23,9 @@ require_once 'config.php';
  * # NOTE: For UK Customers please specify your AuthURL Manually
  * # There is a Predfined constant to use EX:
  * #
- * # $auth = new Authentication("username, "api_key", NULL, UK_AUTHURL);
+ * # $auth = new Authentication("username, "api_key", null, UK_AUTHURL);
  * # Using the UK_AUTHURL keyword will force the api to use the UK AuthUrl.
- * # rather then the US one. The NULL Is passed for legacy purposes and must
+ * # rather then the US one. The null Is passed for legacy purposes and must
  * # be passed to function correctly.
  *
  * # NOTE: Some versions of cURL include an outdated certificate authority (CA)
@@ -41,43 +42,31 @@ require_once 'config.php';
  *
  * @package php-cloudfiles
  */
-class Authentication
+class Authentication implements Configurable
 {
-    public $dbug;
-    public $username;
-    public $api_key;
-    public $auth_host;
-    public $account;
-
-    /**
-     * Instance variables that are set after successful authentication
-     */
-    public $storage_url;
-    public $cdnm_url;
-    public $auth_token;
+    private $config;
 
     /**
      * Class constructor (PHP 5 syntax)
      *
-     * @param string $username Mosso username
-     * @param string $api_key Mosso API Access Key
-     * @param string $account  <i>Account name</i>
-     * @param string $auth_host  <i>Authentication service URI</i>
+     * @param Rackspace\Cloudfiles\Authentication\Config $config
      */
-    function __construct($username=NULL, $api_key=NULL, $account=NULL, $auth_host=US_AUTHURL)
+    public function __construct(AuthenticationConfig $config)
     {
+        $this->config     = $config;
 
-        $this->dbug = False;
-        $this->username = $username;
-        $this->api_key = $api_key;
-        $this->account_name = $account;
-        $this->auth_host = $auth_host;
+        $this->cfs_http = new Http(new HttpConfig($this->config->getCoreConfig()));
+    }
 
-        $this->storage_url = NULL;
-        $this->cdnm_url = NULL;
-        $this->auth_token = NULL;
+    public function setConfiguration($configuration)
+    {
+        $this->config = $configuration;
+        return $this;
+    }
 
-        $this->cfs_http = new Http(DEFAULT_CF_API_VERSION);
+    public function getConfiguration()
+    {
+        return $this->config;
     }
 
     /**
@@ -101,7 +90,7 @@ class Authentication
      *
      * @param string $path Specify path to CA bundle (default to included)
      */
-    function ssl_use_cabundle($path=NULL)
+    function ssl_use_cabundle($path = null)
     {
         $this->cfs_http->ssl_use_cabundle($path);
     }
@@ -110,7 +99,7 @@ class Authentication
      * Attempt to validate Username/API Access Key
      *
      * Attempts to validate credentials with the authentication service.  It
-     * either returns <kbd>True</kbd> or throws an Exception.  Accepts a single
+     * either returns <kbd>true</kbd> or throws an Exception.  Accepts a single
      * (optional) argument for the storage system API version.
      *
      * Example:
@@ -125,68 +114,75 @@ class Authentication
      * </code>
      *
      * @param string $version API version for Auth service (optional)
-     * @return boolean <kbd>True</kbd> if successfully authenticated
+     * @return boolean <kbd>true</kbd> if successfully authenticated
      * @throws AuthenticationException invalid credentials
      * @throws InvalidResponseException invalid response
      */
-    function authenticate($version=DEFAULT_CF_API_VERSION)
+    function authenticate($version = null)
     {
-        list($status,$reason,$surl,$curl,$atoken) =
-                $this->cfs_http->authenticate($this->username, $this->api_key,
-                $this->account_name, $this->auth_host);
+        if (null === $version) {
+            $version = $this->config->getDefaultCloudFilesApiVersion();
+        }
+
+        list($status, $reason, $storage_url, $curl, $atoken) =
+                $this->cfs_http->authenticate($this->config->getUsername(), $this->config->getApiKey(),
+                $this->config->getAccount(), $this->config->getDefaultAuthUrl());
 
         if ($status == 401) {
             throw new AuthenticationException("Invalid username or access key.");
         }
+
         if ($status < 200 || $status > 299) {
-            throw new InvalidResponseException(
-                "Unexpected response (".$status."): ".$reason);
+            throw new InvalidResponseException("Unexpected response ($status): $reason");
         }
 
-        if (!($surl || $curl) || !$atoken) {
-            throw new InvalidResponseException(
-                "Expected headers missing from auth service.");
+        if (!($storage_url || $curl) || !$atoken) {
+            throw new InvalidResponseException("Expected headers missing from auth service.");
         }
-        $this->storage_url = $surl;
-        $this->cdnm_url = $curl;
-        $this->auth_token = $atoken;
-        return True;
+
+        $this->config->setStorageUrl($storage_url);
+        $this->config->setCdnmUrl($curl);
+        $this->config->setAuthToken($atoken);
+
+        return true;
     }
-    /**
-     * Use Cached Token and Storage URL's rather then grabbing from the Auth System
+        /**
+         * Use Cached Token and Storage URL's rather then grabbing from the Auth System
          *
          * Example:
-     * <code>
+         * <code>
          * #Create an Auth instance
          * $auth = new Authentication();
          * #Pass Cached URL's and Token as Args
-     * $auth->load_cached_credentials("auth_token", "storage_url", "cdn_management_url");
+         * $auth->load_cached_credentials("auth_token", "storage_url", "cdn_management_url");
          * </code>
-     *
-     * @param string $auth_token A Cloud Files Auth Token (Required)
+         *
+         * @param string $auth_token A Cloud Files Auth Token (Required)
          * @param string $storage_url The Cloud Files Storage URL (Required)
          * @param string $cdnm_url CDN Management URL (Required)
-         * @return boolean <kbd>True</kbd> if successful
-     * @throws SyntaxException If any of the Required Arguments are missing
+         * @return boolean <kbd>true</kbd> if successful
+         * @throws SyntaxException If any of the Required Arguments are missing
          */
     function load_cached_credentials($auth_token, $storage_url, $cdnm_url)
     {
-        if(!$storage_url || !$cdnm_url)
-        {
-                throw new SyntaxException("Missing Required Interface URL's!");
-                return False;
-        }
-        if(!$auth_token)
-        {
-                throw new SyntaxException("Missing Auth Token!");
-                return False;
+        if (!$storage_url || !$cdnm_url) {
+            throw new SyntaxException("Missing Required Interface URL's!");
+            return false;
         }
 
-        $this->storage_url = $storage_url;
-        $this->cdnm_url    = $cdnm_url;
-        $this->auth_token  = $auth_token;
-        return True;
+        if (!$auth_token) {
+            throw new SyntaxException("Missing Auth Token!");
+            return false;
+        }
+
+        $this->config
+            ->setStorageUrl($storage_url)
+            ->setCdnmUrl($cdnm_url)
+            ->setAuthToken($auth_token);
+
+        return true;
     }
+
     /**
          * Grab Cloud Files info to be Cached for later use with the load_cached_credentials method.
          *
@@ -202,12 +198,11 @@ class Authentication
          */
     function export_credentials()
     {
-        $arr = array();
-        $arr['storage_url'] = $this->storage_url;
-        $arr['cdnm_url']    = $this->cdnm_url;
-        $arr['auth_token']  = $this->auth_token;
-
-        return $arr;
+        return array(
+            'storage_url' => $this->config->getStorageUrl(),
+            'cdnm_url'    => $this->config->getCdnmUrl(),
+            'auth_token'  => $this->config->getAuthToken(),
+        );
     }
 
 
@@ -217,22 +212,14 @@ class Authentication
      * Ensures that the instance variables necessary to communicate with
      * Cloud Files have been set from a previous authenticate() call.
      *
-     * @return boolean <kbd>True</kbd> if successfully authenticated
+     * @return boolean <kbd>true</kbd> if successfully authenticated
      */
     function authenticated()
     {
-        if (!($this->storage_url || $this->cdnm_url) || !$this->auth_token) {
-            return False;
+        if (!($this->config->getStorageUrl() || $this->config->getCdnmUrl()) || !$this->config->getAuthToken()) {
+            return false;
         }
-        return True;
-    }
 
-    /**
-     * Toggle debugging - set cURL verbose flag
-     */
-    function setDebug($bool)
-    {
-        $this->dbug = $bool;
-        $this->cfs_http->setDebug($bool);
+        return true;
     }
 }

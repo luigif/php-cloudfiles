@@ -2,6 +2,8 @@
 
 namespace Rackspace\Cloudfiles;
 
+use Rackspace\Cloudfiles\Config;
+
 use Rackspace\Exception\MisMatchedChecksumException;
 use Rackspace\Exception\InvalidResponseException;
 use Rackspace\Exception\NoSuchContainerException;
@@ -10,8 +12,6 @@ use Rackspace\Exception\CDNNotEnabledException;
 use Rackspace\Exception\NoSuchObjectException;
 use Rackspace\Exception\SyntaxException;
 use Rackspace\Exception\IOException;
-
-require_once 'config.php';
 
 /**
  * Object operations
@@ -41,7 +41,7 @@ class Object
      * @param string $name name of Object
      * @param boolean $force_exists if set, throw an error if Object doesn't exist
      */
-    function __construct(&$container, $name, $force_exists=False, $dohead=True)
+    function __construct(&$container, $name, $force_exists=false, $dohead=true)
     {
         if ($name[0] == "/") {
             $r = "Object name '".$name;
@@ -54,14 +54,14 @@ class Object
         }
         $this->container = $container;
         $this->name = $name;
-        $this->etag = NULL;
-        $this->_etag_override = False;
-        $this->last_modified = NULL;
-        $this->content_type = NULL;
+        $this->etag = null;
+        $this->_etag_override = false;
+        $this->last_modified = null;
+        $this->content_type = null;
         $this->content_length = 0;
         $this->metadata = array();
         $this->headers = array();
-        $this->manifest = NULL;
+        $this->manifest = null;
         if ($dohead) {
             if (!$this->_initialize() && $force_exists) {
                 throw new NoSuchObjectException("No such object '".$name."'");
@@ -100,7 +100,7 @@ class Object
      * mime_content_type function.
      *
      * @param string $handle name of file or buffer to guess the type from
-     * @return boolean <kbd>True</kbd> if successful
+     * @return boolean <kbd>true</kbd> if successful
      * @throws BadContentTypeException
      */
     function _guess_content_type($handle) {
@@ -144,7 +144,7 @@ class Object
         if (!$this->content_type) {
             throw new BadContentTypeException("Required Content-Type not set");
         }
-        return True;
+        return true;
     }
 
     /**
@@ -163,14 +163,14 @@ class Object
      * print "<img src='$pic->public_uri()' />\n";
      * </code>
      *
-     * @return string Object's public URI or NULL
+     * @return string Object's public URI or null
      */
     function public_uri()
     {
         if ($this->container->cdn_enabled) {
             return $this->container->cdn_uri . "/" . $this->name;
         }
-        return NULL;
+        return null;
     }
 
        /**
@@ -189,14 +189,14 @@ class Object
      * print "<img src='$pic->public_ssl_uri()' />\n";
      * </code>
      *
-     * @return string Object's public SSL URI or NULL
+     * @return string Object's public SSL URI or null
      */
     function public_ssl_uri()
     {
         if ($this->container->cdn_enabled) {
             return $this->container->cdn_ssl_uri . "/" . $this->name;
         }
-        return NULL;
+        return null;
     }
     /**
      * String representation of the Object's public Streaming URI
@@ -214,14 +214,14 @@ class Object
      * print "<img src='$pic->public_streaming_uri()' />\n";
      * </code>
      *
-     * @return string Object's public Streaming URI or NULL
+     * @return string Object's public Streaming URI or null
      */
     function public_streaming_uri()
     {
         if ($this->container->cdn_enabled) {
             return $this->container->cdn_streaming_uri . "/" . $this->name;
         }
-        return NULL;
+        return null;
     }
 
     /**
@@ -256,9 +256,7 @@ class Object
     {
         list($status, $reason, $data) =
             $this->container->cfs_http->get_object_to_string($this, $hdrs);
-        #if ($status == 401 && $this->_re_auth()) {
-        #    return $this->read($hdrs);
-        #}
+
         if (($status < 200) || ($status > 299
                 && $status != 412 && $status != 304)) {
             throw new InvalidResponseException("Invalid response (".$status."): "
@@ -313,15 +311,13 @@ class Object
     {
         list($status, $reason) =
                 $this->container->cfs_http->get_object_to_stream($this,$fp,$hdrs);
-        #if ($status == 401 && $this->_re_auth()) {
-        #    return $this->stream($fp, $hdrs);
-        #}
+
         if (($status < 200) || ($status > 299
                 && $status != 412 && $status != 304)) {
             throw new InvalidResponseException("Invalid response (".$status."): "
                 .$reason);
         }
-        return True;
+        return true;
     }
 
     /**
@@ -357,23 +353,21 @@ class Object
      * $doc->sync_metadata();
      * </code>
      *
-     * @return boolean <kbd>True</kbd> if successful, <kbd>False</kbd> otherwise
+     * @return boolean <kbd>true</kbd> if successful, <kbd>false</kbd> otherwise
      * @throws InvalidResponseException unexpected response
      */
     function sync_metadata()
     {
         if (!empty($this->metadata) || !empty($this->headers) || $this->manifest) {
             $status = $this->container->cfs_http->update_object($this);
-            #if ($status == 401 && $this->_re_auth()) {
-            #    return $this->sync_metadata();
-            #}
+
             if ($status != 202) {
                 throw new InvalidResponseException("Invalid response ("
                     .$status."): ".$this->container->cfs_http->get_error());
             }
-            return True;
+            return true;
         }
-        return False;
+        return false;
     }
     /**
      * Store new Object manifest
@@ -398,7 +392,7 @@ class Object
      * $doc->sync_manifest();
      * </code>
      *
-     * @return boolean <kbd>True</kbd> if successful, <kbd>False</kbd> otherwise
+     * @return boolean <kbd>true</kbd> if successful, <kbd>false</kbd> otherwise
      * @throws InvalidResponseException unexpected response
      */
 
@@ -406,6 +400,7 @@ class Object
     {
         return $this->sync_metadata();
     }
+
     /**
      * Upload Object's data to Cloud Files
      *
@@ -430,13 +425,13 @@ class Object
      * @param string|resource $data string or open resource
      * @param float $bytes amount of data to upload (required for resources)
      * @param boolean $verify generate, send, and compare MD5 checksums
-     * @return boolean <kbd>True</kbd> when data uploaded successfully
+     * @return boolean <kbd>true</kbd> when data uploaded successfully
      * @throws SyntaxException missing required parameters
      * @throws BadContentTypeException if no Content-Type was/could be set
      * @throws MisMatchedChecksumException $verify is set and checksums unequal
      * @throws InvalidResponseException unexpected response
      */
-    function write($data=NULL, $bytes=0, $verify=True)
+    function write($data=null, $bytes=0, $verify=true)
     {
         if (!$data && !is_string($data)) {
             throw new SyntaxException("Missing data source.");
@@ -449,20 +444,19 @@ class Object
                 $this->etag = $this->compute_md5sum($data);
             }
         } else {
-            $this->etag = NULL;
+            $this->etag = null;
         }
 
-        $close_fh = False;
+        $close_fh = false;
         if (!is_resource($data)) {
             # A hack to treat string data as a file handle.  php://memory feels
             # like a better option, but it seems to break on Windows so use
             # a temporary file instead.
             #
             $fp = fopen("php://temp", "wb+");
-            #$fp = fopen("php://memory", "wb+");
             fwrite($fp, $data, strlen($data));
             rewind($fp);
-            $close_fh = True;
+            $close_fh = true;
             $this->content_length = (float) strlen($data);
             if ($this->content_length > MAX_OBJECT_SIZE) {
                 throw new SyntaxException("Data exceeds maximum object size");
@@ -479,9 +473,7 @@ class Object
 
         list($status, $reason, $etag) =
                 $this->container->cfs_http->put_object($this, $fp);
-        #if ($status == 401 && $this->_re_auth()) {
-        #    return $this->write($data, $bytes, $verify);
-        #}
+
         if ($status == 412) {
             if ($close_fh) { fclose($fp); }
             throw new SyntaxException("Missing Content-Type header");
@@ -500,14 +492,14 @@ class Object
             $this->etag = $etag;
         }
         if ($close_fh) { fclose($fp); }
-        return True;
+        return true;
     }
 
     /**
      * Upload Object data from local filename
      *
      * This is a convenience function to upload the data from a local file.  A
-     * True value for $verify will cause the method to compute the Object's MD5
+     * true value for $verify will cause the method to compute the Object's MD5
      * checksum prior to uploading.
      *
      * Example:
@@ -525,14 +517,14 @@ class Object
      *
      * @param string $filename full path to local file
      * @param boolean $verify enable local/remote MD5 checksum validation
-     * @return boolean <kbd>True</kbd> if data uploaded successfully
+     * @return boolean <kbd>true</kbd> if data uploaded successfully
      * @throws SyntaxException missing required parameters
      * @throws BadContentTypeException if no Content-Type was/could be set
      * @throws MisMatchedChecksumException $verify is set and checksums unequal
      * @throws InvalidResponseException unexpected response
      * @throws IOException error opening file
      */
-    function load_from_filename($filename, $verify=True)
+    function load_from_filename($filename, $verify=true)
     {
         $fp = @fopen($filename, "r");
         if (!$fp) {
@@ -550,7 +542,7 @@ class Object
 
         $this->write($fp, $size, $verify);
         fclose($fp);
-        return True;
+        return true;
     }
 
     /**
@@ -573,7 +565,7 @@ class Object
      * </code>
      *
      * @param string $filename name of local file to write data to
-     * @return boolean <kbd>True</kbd> if successful
+     * @return boolean <kbd>true</kbd> if successful
      * @throws IOException error opening file
      * @throws InvalidResponseException unexpected response
      */
@@ -601,7 +593,7 @@ class Object
      * $obj->purge_from_cdn();
      * # or
      * $obj->purge_from_cdn("user1@domain.com,user2@domain.com");
-     * @returns boolean True if successful
+     * @returns boolean true if successful
      * @throws CDNNotEnabledException if CDN Is not enabled on this connection
      * @throws InvalidResponseException if the response expected is not returned
      */
@@ -617,7 +609,7 @@ class Object
             throw new InvalidResponseException(
                 "Invalid response (".$status."): ".$this->container->cfs_http->get_error());
         }
-        return True;
+        return true;
     }
 
     /**
@@ -632,7 +624,7 @@ class Object
     function set_etag($etag)
     {
         $this->etag = $etag;
-        $this->_etag_override = True;
+        $this->_etag_override = true;
     }
 
     /**
@@ -655,7 +647,7 @@ class Object
      *
      * <b>WARNING:</b> if you are uploading a big file over a stream
      * it could get very slow to compute the md5 you probably want to
-     * set the $verify parameter to False in the write() method and
+     * set the $verify parameter to false in the write() method and
      * compute yourself the md5 before if you have it.
      *
      * @param filename|obj|string $data filename, open resource, or string
@@ -688,11 +680,9 @@ class Object
         list($status, $reason, $etag, $last_modified, $content_type,
             $content_length, $metadata, $manifest, $headers) =
                 $this->container->cfs_http->head_object($this);
-        #if ($status == 401 && $this->_re_auth()) {
-        #    return $this->_initialize();
-        #}
+
         if ($status == 404) {
-            return False;
+            return false;
         }
         if ($status < 200 || $status > 299) {
             throw new InvalidResponseException("Invalid response (".$status."): "
@@ -705,19 +695,6 @@ class Object
         $this->metadata = $metadata;
         $this->headers = $headers;
         $this->manifest = $manifest;
-        return True;
+        return true;
     }
-
-    #private function _re_auth()
-    #{
-    #    $new_auth = new Authentication(
-    #        $this->cfs_auth->username,
-    #        $this->cfs_auth->api_key,
-    #        $this->cfs_auth->auth_host,
-    #        $this->cfs_auth->account);
-    #    $new_auth->authenticate();
-    #    $this->container->cfs_auth = $new_auth;
-    #    $this->container->cfs_http->setCFAuth($this->cfs_auth);
-    #    return True;
-    #}
 }

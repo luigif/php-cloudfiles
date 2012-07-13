@@ -3,13 +3,12 @@
 namespace Rackspace\Cloudfiles;
 
 use Rackspace\Cloudfiles\Object as CFObject;
+use Rackspace\Cloudfiles\Config;
 
 use Rackspace\Exception\InvalidResponseException;
 use Rackspace\Exception\CDNNotEnabledException;
 use Rackspace\Exception\NoSuchObjectException;
 use Rackspace\Exception\SyntaxException;
-
-require_once 'config.php';
 
 /**
  * Container operations
@@ -54,13 +53,13 @@ class Container
      * @throws SyntaxException invalid Container name
      */
     function __construct(&$cfs_auth, &$cfs_http, $name, $count=0,
-        $bytes=0, $docdn=True)
+        $bytes=0, $docdn=true)
     {
         if (strlen($name) > MAX_CONTAINER_NAME_LEN) {
             throw new SyntaxException("Container name exceeds "
                 . "maximum allowed length.");
         }
-        if (strpos($name, "/") !== False) {
+        if (strpos($name, "/") !== false) {
             throw new SyntaxException(
                 "Container names cannot contain a '/' character.");
         }
@@ -69,15 +68,15 @@ class Container
         $this->name = $name;
         $this->object_count = $count;
         $this->bytes_used = $bytes;
-        $this->cdn_enabled = NULL;
-        $this->cdn_uri = NULL;
-        $this->cdn_ssl_uri = NULL;
-        $this->cdn_streaming_uri = NULL;
-        $this->cdn_ttl = NULL;
-        $this->cdn_log_retention = NULL;
-        $this->cdn_acl_user_agent = NULL;
-        $this->cdn_acl_referrer = NULL;
-        if ($this->cfs_http->getCDNMUrl() != NULL && $docdn) {
+        $this->cdn_enabled = null;
+        $this->cdn_uri = null;
+        $this->cdn_ssl_uri = null;
+        $this->cdn_streaming_uri = null;
+        $this->cdn_ttl = null;
+        $this->cdn_log_retention = null;
+        $this->cdn_acl_user_agent = null;
+        $this->cdn_acl_referrer = null;
+        if ($this->cfs_http->getCDNMUrl() != null && $docdn) {
             $this->_cdn_initialize();
         }
     }
@@ -93,18 +92,18 @@ class Container
     {
         $me = sprintf("name: %s, count: %.0f, bytes: %.0f",
             $this->name, $this->object_count, $this->bytes_used);
-        if ($this->cfs_http->getCDNMUrl() != NULL) {
+        if ($this->cfs_http->getCDNMUrl() != null) {
             $me .= sprintf(", cdn: %s, cdn uri: %s, cdn ttl: %.0f, logs retention: %s",
                 $this->is_public() ? "Yes" : "No",
                 $this->cdn_uri, $this->cdn_ttl,
                 $this->cdn_log_retention ? "Yes" : "No"
                 );
 
-            if ($this->cdn_acl_user_agent != NULL) {
+            if ($this->cdn_acl_user_agent != null) {
                 $me .= ", cdn acl user agent: " . $this->cdn_acl_user_agent;
             }
 
-            if ($this->cdn_acl_referrer != NULL) {
+            if ($this->cdn_acl_referrer != null) {
                 $me .= ", cdn acl referrer: " . $this->cdn_acl_referrer;
             }
 
@@ -141,11 +140,11 @@ class Container
      */
     function make_public($ttl=86400)
     {
-        if ($this->cfs_http->getCDNMUrl() == NULL) {
+        if ($this->cfs_http->getCDNMUrl() == null) {
             throw new CDNNotEnabledException(
                 "Authentication response did not indicate CDN availability");
         }
-        if ($this->cdn_uri != NULL) {
+        if ($this->cdn_uri != null) {
             # previously published, assume we're setting new attributes
             list($status, $reason, $cdn_uri, $cdn_ssl_uri) =
                 $this->cfs_http->update_cdn_container($this->name,$ttl,
@@ -174,11 +173,11 @@ class Container
             throw new InvalidResponseException(
                 "Invalid response (".$status."): ".$this->cfs_http->get_error());
         }
-        $this->cdn_enabled = True;
+        $this->cdn_enabled = true;
         $this->cdn_ttl = $ttl;
         $this->cdn_ssl_uri = $cdn_ssl_uri;
         $this->cdn_uri = $cdn_uri;
-        $this->cdn_log_retention = False;
+        $this->cdn_log_retention = false;
         $this->cdn_acl_user_agent = "";
         $this->cdn_acl_referrer = "";
         return $this->cdn_uri;
@@ -196,7 +195,7 @@ class Container
      * $container->purge_from_cdn();
      * # or
      * $container->purge_from_cdn("user1@domain.com,user2@domain.com");
-     * @returns boolean True if successful
+     * @returns boolean true if successful
      * @throws CDNNotEnabledException if CDN Is not enabled on this connection
      * @throws InvalidResponseException if the response expected is not returned
      */
@@ -212,7 +211,7 @@ class Container
             throw new InvalidResponseException(
                 "Invalid response (".$status."): ".$this->cfs_http->get_error());
         }
-        return True;
+        return true;
     }
     /**
      * Enable ACL restriction by User Agent for this container.
@@ -229,13 +228,13 @@ class Container
      * $public_container->acl_referrer("Mozilla");
      * </code>
      *
-     * @returns boolean True if successful
+     * @returns boolean true if successful
      * @throws CDNNotEnabledException CDN functionality not returned during auth
      * @throws AuthenticationException if auth token is not valid/expired
      * @throws InvalidResponseException unexpected response
      */
     function acl_user_agent($cdn_acl_user_agent="") {
-        if ($this->cfs_http->getCDNMUrl() == NULL) {
+        if ($this->cfs_http->getCDNMUrl() == null) {
             throw new CDNNotEnabledException(
                 "Authentication response did not indicate CDN availability");
         }
@@ -251,7 +250,7 @@ class Container
                 "Invalid response (".$status."): ".$this->cfs_http->get_error());
         }
         $this->cdn_acl_user_agent = $cdn_acl_user_agent;
-        return True;
+        return true;
     }
 
     /**
@@ -269,13 +268,13 @@ class Container
      * $public_container->acl_referrer("http://www.example.com/gallery.php");
      * </code>
      *
-     * @returns boolean True if successful
+     * @returns boolean true if successful
      * @throws CDNNotEnabledException CDN functionality not returned during auth
      * @throws AuthenticationException if auth token is not valid/expired
      * @throws InvalidResponseException unexpected response
      */
     function acl_referrer($cdn_acl_referrer="") {
-        if ($this->cfs_http->getCDNMUrl() == NULL) {
+        if ($this->cfs_http->getCDNMUrl() == null) {
             throw new CDNNotEnabledException(
                 "Authentication response did not indicate CDN availability");
         }
@@ -291,7 +290,7 @@ class Container
                 "Invalid response (".$status."): ".$this->cfs_http->get_error());
         }
         $this->cdn_acl_referrer = $cdn_acl_referrer;
-        return True;
+        return true;
     }
 
     /**
@@ -312,16 +311,16 @@ class Container
      * $public_container = $conn->get_container("public");
      *
      * # Enable logs retention.
-     * $public_container->log_retention(True);
+     * $public_container->log_retention(true);
      * </code>
      *
-     * @returns boolean True if successful
+     * @returns boolean true if successful
      * @throws CDNNotEnabledException CDN functionality not returned during auth
      * @throws AuthenticationException if auth token is not valid/expired
      * @throws InvalidResponseException unexpected response
      */
-    function log_retention($cdn_log_retention=False) {
-        if ($this->cfs_http->getCDNMUrl() == NULL) {
+    function log_retention($cdn_log_retention=false) {
+        if ($this->cfs_http->getCDNMUrl() == null) {
             throw new CDNNotEnabledException(
                 "Authentication response did not indicate CDN availability");
         }
@@ -337,7 +336,7 @@ class Container
                 "Invalid response (".$status."): ".$this->cfs_http->get_error());
         }
         $this->cdn_log_retention = $cdn_log_retention;
-        return True;
+        return true;
     }
 
     /**
@@ -365,14 +364,14 @@ class Container
      * $public_container->make_private();
      * </code>
      *
-     * @returns boolean True if successful
+     * @returns boolean true if successful
      * @throws CDNNotEnabledException CDN functionality not returned during auth
      * @throws AuthenticationException if auth token is not valid/expired
      * @throws InvalidResponseException unexpected response
      */
     function make_private()
     {
-        if ($this->cfs_http->getCDNMUrl() == NULL) {
+        if ($this->cfs_http->getCDNMUrl() == null) {
             throw new CDNNotEnabledException(
                 "Authentication response did not indicate CDN availability");
         }
@@ -384,15 +383,15 @@ class Container
             throw new InvalidResponseException(
                 "Invalid response (".$status."): ".$this->cfs_http->get_error());
         }
-        $this->cdn_enabled = False;
-        $this->cdn_ttl = NULL;
-        $this->cdn_uri = NULL;
-        $this->cdn_ssl_uri = NULL;
-        $this->cdn_streaming_uri - NULL;
-        $this->cdn_log_retention = NULL;
-        $this->cdn_acl_user_agent = NULL;
-        $this->cdn_acl_referrer = NULL;
-        return True;
+        $this->cdn_enabled = false;
+        $this->cdn_ttl = null;
+        $this->cdn_uri = null;
+        $this->cdn_ssl_uri = null;
+        $this->cdn_streaming_uri - null;
+        $this->cdn_log_retention = null;
+        $this->cdn_acl_user_agent = null;
+        $this->cdn_acl_referrer = null;
+        return true;
     }
 
     /**
@@ -414,11 +413,11 @@ class Container
      * $public_container->is_public() ? print "Yes" : print "No";
      * </code>
      *
-     * @returns boolean True if enabled, False otherwise
+     * @returns boolean true if enabled, false otherwise
      */
     function is_public()
     {
-        return $this->cdn_enabled == True ? True : False;
+        return $this->cdn_enabled == true ? true : false;
     }
 
     /**
@@ -444,7 +443,7 @@ class Container
      * @param string $obj_name name of storage Object
      * @return obj CFObject instance
      */
-    function create_object($obj_name=NULL)
+    function create_object($obj_name=null)
     {
         return new CFObject($this, $obj_name);
     }
@@ -473,9 +472,9 @@ class Container
      * @param string $obj_name name of storage Object
      * @return obj CFObject instance
      */
-    function get_object($obj_name=NULL)
+    function get_object($obj_name=null)
     {
-        return new CFObject($this, $obj_name, True);
+        return new CFObject($this, $obj_name, true);
     }
 
     /**
@@ -505,14 +504,14 @@ class Container
      * # Grab images starting with "birthday_party" and default limit/marker
      * # to match all photos with that prefix
      * #
-     * $prefixed = $images->list_objects(0, NULL, "birthday");
+     * $prefixed = $images->list_objects(0, null, "birthday");
      *
      * # Assuming you have created the appropriate directory marker Objects,
      * # you can traverse your pseudo-hierarchical containers
      * # with the "path" argument.
      * #
-     * $animals = $images->list_objects(0,NULL,NULL,"pictures/animals");
-     * $dogs = $images->list_objects(0,NULL,NULL,"pictures/animals/dogs");
+     * $animals = $images->list_objects(0,null,null,"pictures/animals");
+     * $dogs = $images->list_objects(0,null,null,"pictures/animals/dogs");
      * </code>
      *
      * @param int $limit <i>optional</i> only return $limit names
@@ -522,7 +521,7 @@ class Container
      * @return array array of strings
      * @throws InvalidResponseException unexpected response
      */
-    function list_objects($limit=0, $marker=NULL, $prefix=NULL, $path=NULL)
+    function list_objects($limit=0, $marker=null, $prefix=null, $path=null)
     {
         list($status, $reason, $obj_list) =
             $this->cfs_http->list_objects($this->name, $limit,
@@ -564,14 +563,14 @@ class Container
      * # Grab images starting with "birthday_party" and default limit/marker
      * # to match all photos with that prefix
      * #
-     * $prefixed = $images->get_objects(0, NULL, "birthday");
+     * $prefixed = $images->get_objects(0, null, "birthday");
      *
      * # Assuming you have created the appropriate directory marker Objects,
      * # you can traverse your pseudo-hierarchical containers
      * # with the "path" argument.
      * #
-     * $animals = $images->get_objects(0,NULL,NULL,"pictures/animals");
-     * $dogs = $images->get_objects(0,NULL,NULL,"pictures/animals/dogs");
+     * $animals = $images->get_objects(0,null,null,"pictures/animals");
+     * $dogs = $images->get_objects(0,null,null,"pictures/animals/dogs");
      * </code>
      *
      * @param int $limit <i>optional</i> only return $limit names
@@ -581,7 +580,7 @@ class Container
      * @return array array of strings
      * @throws InvalidResponseException unexpected response
      */
-    function get_objects($limit=0, $marker=NULL, $prefix=NULL, $path=NULL)
+    function get_objects($limit=0, $marker=null, $prefix=null, $path=null)
     {
         list($status, $reason, $obj_array) =
             $this->cfs_http->get_objects($this->name, $limit,
@@ -595,7 +594,7 @@ class Container
         }
         $objects = array();
         foreach ($obj_array as $obj) {
-            $tmp = new CFObject($this, $obj["name"], False, False);
+            $tmp = new CFObject($this, $obj["name"], false, false);
             $tmp->content_type = $obj["content_type"];
             $tmp->content_length = (float) $obj["bytes"];
             $tmp->set_etag($obj["hash"]);
@@ -634,9 +633,9 @@ class Container
      * @throws NoSuchObjectException remote Object does not exist
      * @throws InvalidResponseException unexpected response
      */
-    function copy_object_to($obj,$container_target,$dest_obj_name=NULL,$metadata=NULL,$headers=NULL)
+    function copy_object_to($obj,$container_target,$dest_obj_name=null,$metadata=null,$headers=null)
     {
-        $obj_name = NULL;
+        $obj_name = null;
         if (is_object($obj)) {
             if (get_class($obj) == "Rackspace\\Cloudfiles\\Object") {
                 $obj_name = $obj->name;
@@ -649,11 +648,11 @@ class Container
             throw new SyntaxException("Object name not set.");
         }
 
-                if ($dest_obj_name === NULL) {
+                if ($dest_obj_name === null) {
             $dest_obj_name = $obj_name;
                 }
 
-        $container_name_target = NULL;
+        $container_name_target = null;
         if (is_object($container_target)) {
             if (get_class($container_target) == "Rackspace\\Cloudfiles\\Container") {
                 $container_name_target = $container_target->name;
@@ -708,9 +707,9 @@ class Container
      * @throws NoSuchObjectException remote Object does not exist
      * @throws InvalidResponseException unexpected response
      */
-    function copy_object_from($obj,$container_source,$dest_obj_name=NULL,$metadata=NULL,$headers=NULL)
+    function copy_object_from($obj,$container_source,$dest_obj_name=null,$metadata=null,$headers=null)
     {
-        $obj_name = NULL;
+        $obj_name = null;
         if (is_object($obj)) {
             if (get_class($obj) == "Rackspace\\Cloudfiles\\Object") {
                 $obj_name = $obj->name;
@@ -723,11 +722,11 @@ class Container
             throw new SyntaxException("Object name not set.");
         }
 
-                if ($dest_obj_name === NULL) {
+                if ($dest_obj_name === null) {
             $dest_obj_name = $obj_name;
                 }
 
-        $container_name_source = NULL;
+        $container_name_source = null;
         if (is_object($container_source)) {
             if (get_class($container_source) == "Rackspace\\Cloudfiles\\Container") {
                 $container_name_source = $container_source->name;
@@ -783,7 +782,7 @@ class Container
      * @throws NoSuchObjectException remote Object does not exist
      * @throws InvalidResponseException unexpected response
      */
-    function move_object_to($obj,$container_target,$dest_obj_name=NULL,$metadata=NULL,$headers=NULL)
+    function move_object_to($obj,$container_target,$dest_obj_name=null,$metadata=null,$headers=null)
     {
         $retVal = false;
 
@@ -823,7 +822,7 @@ class Container
      * @throws NoSuchObjectException remote Object does not exist
      * @throws InvalidResponseException unexpected response
      */
-    function move_object_from($obj,$container_source,$dest_obj_name=NULL,$metadata=NULL,$headers=NULL)
+    function move_object_from($obj,$container_source,$dest_obj_name=null,$metadata=null,$headers=null)
     {
         $retVal = false;
 
@@ -855,14 +854,14 @@ class Container
      *
      * @param obj $obj name or instance of Object to delete
      * @param obj $container name or instance of Container in which the object resides (optional)
-     * @return boolean <kbd>True</kbd> if successfully removed
+     * @return boolean <kbd>true</kbd> if successfully removed
      * @throws SyntaxException invalid Object name
      * @throws NoSuchObjectException remote Object does not exist
      * @throws InvalidResponseException unexpected response
      */
-    function delete_object($obj,$container=NULL)
+    function delete_object($obj,$container=null)
     {
-        $obj_name = NULL;
+        $obj_name = null;
         if (is_object($obj)) {
             if (get_class($obj) == "Rackspace\\Cloudfiles\\Object") {
                 $obj_name = $obj->name;
@@ -875,9 +874,9 @@ class Container
             throw new SyntaxException("Object name not set.");
         }
 
-        $container_name = NULL;
+        $container_name = null;
 
-        if($container === NULL) {
+        if($container === null) {
             $container_name = $this->name;
         }
         else {
@@ -907,7 +906,7 @@ class Container
             throw new InvalidResponseException(
                 "Invalid response (".$status."): ".$this->cfs_http->get_error());
         }
-        return True;
+        return true;
     }
 
     /**
@@ -976,6 +975,6 @@ class Container
     #    $new_auth->authenticate();
     #    $this->cfs_auth = $new_auth;
     #    $this->cfs_http->setCFAuth($this->cfs_auth);
-    #    return True;
+    #    return true;
     #}
 }

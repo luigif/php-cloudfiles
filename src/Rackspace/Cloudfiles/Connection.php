@@ -3,6 +3,8 @@
 namespace Rackspace\Cloudfiles;
 
 use Rackspace\Cloudfiles\Authentication;
+use Rackspace\Cloudfiles\Http\Config as HttpConfig;
+use Rackspace\Cloudfiles\CoreConfig;
 use Rackspace\Cloudfiles\Container;
 use Rackspace\Cloudfiles\Http;
 
@@ -11,8 +13,6 @@ use Rackspace\Exception\InvalidResponseException;
 use Rackspace\Exception\NoSuchContainerException;
 use Rackspace\Exception\AuthenticationException;
 use Rackspace\Exception\SyntaxException;
-
-require_once 'config.php';
 
 /**
  * Class for establishing connections to the Cloud Files storage system.
@@ -47,7 +47,8 @@ require_once 'config.php';
  */
 class Connection
 {
-    public $dbug;
+    protected $config;
+
     public $cfs_http;
     public $cfs_auth;
 
@@ -70,10 +71,10 @@ class Connection
      * $conn = new Connection($auth);
      *
      * # If you are connecting via Rackspace servers and have access
-     * # to the servicenet network you can set the $servicenet to True
+     * # to the servicenet network you can set the $servicenet to true
      * # like this.
      *
-     * $conn = new Connection($auth, $servicenet=True);
+     * $conn = new Connection($auth, $servicenet=true);
      *
      * </code>
      *
@@ -84,19 +85,22 @@ class Connection
      * @param boolean $servicenet enable/disable access via Rackspace servicenet.
      * @throws AuthenticationException not authenticated
      */
-    function __construct($cfs_auth, $servicenet=False)
+    function __construct(CoreConfig $config, Authentication $cfs_auth, $servicenet = false)
     {
-        if (isset($_ENV['RACKSPACE_SERVICENET']))
-            $servicenet=True;
-        $this->cfs_http = new Http(DEFAULT_CF_API_VERSION);
-        $this->cfs_auth = $cfs_auth;
-        if (!$this->cfs_auth->authenticated()) {
-            $e = "Need to pass in a previously authenticated ";
-            $e .= "Authentication instance.";
-            throw new AuthenticationException($e);
+        $this->config = $config;
+
+        if (isset($_ENV['RACKSPACE_SERVICENET'])) {
+            $servicenet = true;
         }
+
+        $this->cfs_http = new Http(new HttpConfig($this->config));
+        $this->cfs_auth = $cfs_auth;
+
+        if (!$this->cfs_auth->authenticated()) {
+            throw new AuthenticationException('Need to pass in a previously authenticated Authentication instance.');
+        }
+
         $this->cfs_http->setCFAuth($this->cfs_auth, $servicenet=$servicenet);
-        $this->dbug = False;
     }
 
     /**
@@ -104,10 +108,10 @@ class Connection
      *
      * @param boolean $bool enable/disable cURL debugging
      */
-    function setDebug($bool)
+    function setDebug($debug)
     {
-        $this->dbug = (boolean) $bool;
-        $this->cfs_http->setDebug($this->dbug);
+        $this->config->setDebug($debug);
+        $this->cfs_http->setDebug($this->config->getDebug());
     }
 
     /**
@@ -150,15 +154,12 @@ class Connection
      */
     function get_info()
     {
-        list($status, $reason, $container_count, $total_bytes) =
-                $this->cfs_http->head_account();
-        #if ($status == 401 && $this->_re_auth()) {
-        #    return $this->get_info();
-        #}
+        list($status, $reason, $container_count, $total_bytes) = $this->cfs_http->head_account();
+
         if ($status < 200 || $status > 299) {
-            throw new InvalidResponseException(
-                "Invalid response (".$status."): ".$this->cfs_http->get_error());
+            throw new InvalidResponseException("Invalid response ($status): " . $this->cfs_http->get_error());
         }
+
         return array($container_count, $total_bytes);
     }
 
@@ -182,38 +183,34 @@ class Connection
      * @throws SyntaxException invalid name
      * @throws InvalidResponseException unexpected response
      */
-    function create_container($container_name=NULL)
+    function create_container($container_name = null)
     {
-        if ($container_name != "0" and !isset($container_name))
+        if ($container_name != "0" and !isset($container_name)) {
             throw new SyntaxException("Container name not set.");
-
-        if (!isset($container_name) or $container_name == "")
-            throw new SyntaxException("Container name not set.");
-
-        if (strpos($container_name, "/") !== False) {
-            $r = "Container name '".$container_name;
-            $r .= "' cannot contain a '/' character.";
-            throw new SyntaxException($r);
         }
+
+        if (!isset($container_name) or $container_name == "") {
+            throw new SyntaxException("Container name not set.");
+        }
+
+        if (strpos($container_name, "/") !== false) {
+            throw new SyntaxException("Container name '$container_name' cannot contain a '/' character.");
+        }
+
         if (strlen($container_name) > MAX_CONTAINER_NAME_LEN) {
-            throw new SyntaxException(sprintf(
-                "Container name exeeds %d bytes.",
-                MAX_CONTAINER_NAME_LEN));
+            throw new SyntaxException(sprintf("Container name exeeds %d bytes.", MAX_CONTAINER_NAME_LEN));
         }
 
         $return_code = $this->cfs_http->create_container($container_name);
+
         if (!$return_code) {
-            throw new InvalidResponseException("Invalid response ("
-                . $return_code. "): " . $this->cfs_http->get_error());
+            throw new InvalidResponseException("Invalid response ($return_code): " . $this->cfs_http->get_error());
         }
-        #if ($status == 401 && $this->_re_auth()) {
-        #    return $this->create_container($container_name);
-        #}
+
         if ($return_code != 201 && $return_code != 202) {
-            throw new InvalidResponseException(
-                "Invalid response (".$return_code."): "
-                    . $this->cfs_http->get_error());
+            throw new InvalidResponseException("Invalid response ($return_code): " . $this->cfs_http->get_error());
         }
+
         return new Container($this->cfs_auth, $this->cfs_http, $container_name);
     }
 
@@ -233,50 +230,49 @@ class Connection
      * </code>
      *
      * @param string|obj $container container name or instance
-     * @return boolean <kbd>True</kbd> if successfully deleted
+     * @return boolean <kbd>true</kbd> if successfully deleted
      * @throws SyntaxException missing proper argument
      * @throws InvalidResponseException invalid response
      * @throws NonEmptyContainerException container not empty
      * @throws NoSuchContainerException remote container does not exist
      */
-    function delete_container($container=NULL)
+    function delete_container($container = null)
     {
-        $container_name = NULL;
+        $container_name = null;
 
         if (is_object($container)) {
-            if (get_class($container) == "Rackspace\\Cloudfiles\\Container") {
+            if (get_class($container) === "Rackspace\\Cloudfiles\\Container") {
                 $container_name = $container->name;
             }
         }
+
         if (is_string($container)) {
             $container_name = $container;
         }
 
-        if ($container_name != "0" and !isset($container_name))
+        if ($container_name != "0" && !isset($container_name)) {
             throw new SyntaxException("Must specify container object or name.");
+        }
 
         $return_code = $this->cfs_http->delete_container($container_name);
 
         if (!$return_code) {
             throw new InvalidResponseException("Failed to obtain http response");
         }
-        #if ($status == 401 && $this->_re_auth()) {
-        #    return $this->delete_container($container);
-        #}
+
         if ($return_code == 409) {
-            throw new NonEmptyContainerException(
-                "Container must be empty prior to removing it.");
+            throw new NonEmptyContainerException("Container must be empty prior to removing it.");
         }
+
         if ($return_code == 404) {
-            throw new NoSuchContainerException(
-                "Specified container did not exist to delete.");
+            throw new NoSuchContainerException("Specified container did not exist to delete.");
         }
+
         if ($return_code != 204) {
-            throw new InvalidResponseException(
-                "Invalid response (".$return_code."): "
-                . $this->cfs_http->get_error());
+            throw new InvalidResponseException("Invalid response ($return_code): " . $this->cfs_http->get_error());
         }
-        return True;
+
+        return true;
     }
 
     /**
@@ -301,22 +297,19 @@ class Connection
      * @throws NoSuchContainerException thrown if no remote Container
      * @throws InvalidResponseException unexpected response
      */
-    function get_container($container_name=NULL)
+    function get_container($container_name = null)
     {
-        list($status, $reason, $count, $bytes) =
-                $this->cfs_http->head_container($container_name);
-        #if ($status == 401 && $this->_re_auth()) {
-        #    return $this->get_container($container_name);
-        #}
+        list($status, $reason, $count, $bytes) = $this->cfs_http->head_container($container_name);
+
         if ($status == 404) {
             throw new NoSuchContainerException("Container not found.");
         }
+
         if ($status < 200 || $status > 299) {
-            throw new InvalidResponseException(
-                "Invalid response: ".$this->cfs_http->get_error());
+            throw new InvalidResponseException("Invalid response: " . $this->cfs_http->get_error());
         }
-        return new Container($this->cfs_auth, $this->cfs_http,
-            $container_name, $count, $bytes);
+
+        return new Container($this->cfs_auth, $this->cfs_http, $container_name, $count, $bytes);
     }
 
     /**
@@ -343,22 +336,26 @@ class Connection
      * @return array An array of Container instances
      * @throws InvalidResponseException unexpected response
      */
-    function get_containers($limit=0, $marker=NULL)
+    function get_containers($limit = 0, $marker = null)
     {
-        list($status, $reason, $container_info) =
-                $this->cfs_http->list_containers_info($limit, $marker);
-        #if ($status == 401 && $this->_re_auth()) {
-        #    return $this->get_containers();
-        #}
+        list($status, $reason, $container_info) = $this->cfs_http->list_containers_info($limit, $marker);
+
         if ($status < 200 || $status > 299) {
-            throw new InvalidResponseException(
-                "Invalid response: ".$this->cfs_http->get_error());
+            throw new InvalidResponseException("Invalid response: " . $this->cfs_http->get_error());
         }
+
         $containers = array();
         foreach ($container_info as $name => $info) {
-            $containers[] = new Container($this->cfs_auth, $this->cfs_http,
-                $info['name'], $info["count"], $info["bytes"], False);
+            $containers[] = new Container(
+                $this->cfs_auth,
+                $this->cfs_http,
+                $info['name'],
+                $info["count"],
+                $info["bytes"],
+                false
+            );
         }
+
         return $containers;
     }
 
@@ -387,17 +384,14 @@ class Connection
      * @return array list of remote Containers
      * @throws InvalidResponseException unexpected response
      */
-    function list_containers($limit=0, $marker=NULL)
+    function list_containers($limit = 0, $marker = null)
     {
-        list($status, $reason, $containers) =
-            $this->cfs_http->list_containers($limit, $marker);
-        #if ($status == 401 && $this->_re_auth()) {
-        #    return $this->list_containers($limit, $marker);
-        #}
+        list($status, $reason, $containers) = $this->cfs_http->list_containers($limit, $marker);
+
         if ($status < 200 || $status > 299) {
-            throw new InvalidResponseException(
-                "Invalid response (".$status."): ".$this->cfs_http->get_error());
+            throw new InvalidResponseException("Invalid response ($status): " . $this->cfs_http->get_error());
         }
+
         return $containers;
     }
 
@@ -435,17 +429,14 @@ class Connection
      * @return array nested array structure of Container info
      * @throws InvalidResponseException unexpected response
      */
-    function list_containers_info($limit=0, $marker=NULL)
+    function list_containers_info($limit = 0, $marker = null)
     {
-        list($status, $reason, $container_info) =
-                $this->cfs_http->list_containers_info($limit, $marker);
-        #if ($status == 401 && $this->_re_auth()) {
-        #    return $this->list_containers_info($limit, $marker);
-        #}
+        list($status, $reason, $container_info) = $this->cfs_http->list_containers_info($limit, $marker);
+
         if ($status < 200 || $status > 299) {
-            throw new InvalidResponseException(
-                "Invalid response (".$status."): ".$this->cfs_http->get_error());
+            throw new InvalidResponseException("Invalid response ($status): " . $this->cfs_http->get_error());
         }
+
         return $container_info;
     }
 
@@ -477,17 +468,14 @@ class Connection
      * @return array list of published Container names
      * @throws InvalidResponseException unexpected response
      */
-    function list_public_containers($enabled_only=False)
+    function list_public_containers($enabled_only = false)
     {
-        list($status, $reason, $containers) =
-                $this->cfs_http->list_cdn_containers($enabled_only);
-        #if ($status == 401 && $this->_re_auth()) {
-        #    return $this->list_public_containers();
-        #}
+        list($status, $reason, $containers) = $this->cfs_http->list_cdn_containers($enabled_only);
+
         if ($status < 200 || $status > 299) {
-            throw new InvalidResponseException(
-                "Invalid response (".$status."): ".$this->cfs_http->get_error());
+            throw new InvalidResponseException("Invalid response ($status): " . $this->cfs_http->get_error());
         }
+
         return $containers;
     }
 
@@ -589,21 +577,8 @@ class Connection
      *
      * @param string $path Specify path to CA bundle (default to included)
      */
-    function ssl_use_cabundle($path=NULL)
+    function ssl_use_cabundle($path = null)
     {
         $this->cfs_http->ssl_use_cabundle($path);
     }
-
-    #private function _re_auth()
-    #{
-    #    $new_auth = new Authentication(
-    #        $this->cfs_auth->username,
-    #        $this->cfs_auth->api_key,
-    #        $this->cfs_auth->auth_host,
-    #        $this->cfs_auth->account);
-    #    $new_auth->authenticate();
-    #    $this->cfs_auth = $new_auth;
-    #    $this->cfs_http->setCFAuth($this->cfs_auth);
-    #    return True;
-    #}
 }
