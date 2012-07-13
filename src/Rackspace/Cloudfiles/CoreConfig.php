@@ -2,49 +2,88 @@
 
 namespace Rackspace\Cloudfiles;
 
+use Agavee\Toolbox\Parameters\Checker as ParametersChecker;
+
 /**
- * Abstract base class for Rackspace Cloudfiles classes
+ * Abstract common config class for Rackspace Cloudfiles classes
  */
-abstract class Config
+class CoreConfig
 {
     protected $defaultCloudFilesApiVersion;
     protected $maxContainerNameLength;
-    protected $maxObjectNameLength;
-    protected $maxObjectSize;
-    protected $authUrls;
     protected $cloudFilesCABundlePath;
     protected $cloudFilesMagicPath;
+    protected $defaultAuthUrlIndex;
+    protected $maxObjectNameLength;
+    protected $defaultAuthUrl;
+    protected $maxObjectSize;
+    protected $authUrls;
 
     protected $defaultParameters = array(
         'defaultCloudFilesApiVersion' => 1,
         'maxContainerNameLength'      => 256,
         'maxObjectNameLength'         => 1024,
+        'defaultAuthUrlIndex'         => 'us',
         'maxObjectSize'               => 5368709121, // 1 + 5 * 1024^3
         'authUrls'                    => array(
-            'uk' => 'https://auth.api.rackspacecloud.com',
-            'us' => 'https://lon.auth.api.rackspacecloud.com',
+            'us' => 'https://auth.api.rackspacecloud.com',
+            'uk' => 'https://lon.auth.api.rackspacecloud.com',
         ),
+        'debug'                       => false,
     );
 
     protected $mandatoryParameters = array(
         'defaultCloudFilesApiVersion',
         'maxContainerNameLength',
+        'cloudFilesCABundlePath',
+        'cloudFilesMagicPath',
         'maxObjectNameLength',
+        'defaultAuthUrlIndex',
         'maxObjectSize',
         'authUrls',
-        'cloudFilesCABundlePath',
-        'cloudFilesMagicPath'
     );
+
+    /**
+     * Setup the configuration object
+     *
+     * @param array $config
+     *   the two mandatory parameters are:
+     *     *  cloudFilesCABundlePath
+     *     *  cloudFilesMagicPath
+     *   the other ones have sensible default but can be overridden
+     */
+    public function __construct(array $config = array())
+    {
+        $config = array_merge($this->defaultParameters, $config);
+
+        ParametersChecker::check($config, $this->mandatoryParameters);
+
+        // Mandatory parameters
+        $this
+            ->setDefaultCloudFilesApiVersion($config['defaultCloudFilesApiVersion'])
+            ->setMaxContainerNameLength($config['maxContainerNameLength'])
+            ->setCloudFilesCABundlePath($config['cloudFilesCABundlePath'])
+            ->setCloudFilesMagicPath($config['cloudFilesMagicPath'])
+            ->setMaxObjectNameLength($config['maxObjectNameLength'])
+            ->setDefaultAuthUrlIndex($config['defaultAuthUrlIndex'])
+            ->setMaxObjectSize($config['maxObjectSize'])
+            ->setAuthUrls($config['authUrls']);
+
+        // Optional parameters
+        $debug = isset($config['debug']) ? $config['debug'] : false;
+
+        $this->setDebug($debug);
+    }
 
     public function setDefaultCloudFilesApiVersion($defaultCloudFilesApiVersion)
     {
-        $this->$defaultCloudFilesApiVersion = $defaultCloudFilesApiVersion;
+        $this->defaultCloudFilesApiVersion = $defaultCloudFilesApiVersion;
         return $this;
     }
 
     public function getDefaultCloudFilesApiVersion()
     {
-        return $this->$defaultCloudFilesApiVersion;
+        return $this->defaultCloudFilesApiVersion;
     }
 
     public function setMaxContainerNameLength($maxContainerNameLength)
@@ -124,6 +163,22 @@ abstract class Config
         throw new \RuntimeException("Index $index doesn't exist");
     }
 
+    public function setDefaultAuthUrlIndex($defaultAuthUrlIndex)
+    {
+        $this->defaultAuthUrlIndex = $defaultAuthUrlIndex;
+        return $this;
+    }
+
+    public function getDefaultAuthUrlIndex()
+    {
+        return $this->defaultAuthUrlIndex;
+    }
+
+    public function getDefaultAuthUrl()
+    {
+        return $this->authUrls[$this->defaultAuthUrlIndex];
+    }
+
     public function setCloudFilesCABundlePath($cloudFilesCABundlePath)
     {
         $this->cloudFilesCABundlePath = $cloudFilesCABundlePath;
@@ -144,5 +199,16 @@ abstract class Config
     public function getCloudFilesMagicPath()
     {
         return $this->cloudFilesMagicPath;
+    }
+
+    public function setDebug($debug)
+    {
+        $this->debug = $debug;
+        return $this;
+    }
+
+    public function getDebug()
+    {
+        return $this->debug;
     }
 }
