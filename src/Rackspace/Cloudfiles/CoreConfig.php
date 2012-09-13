@@ -2,7 +2,7 @@
 
 namespace Rackspace\Cloudfiles;
 
-use Agavee\Toolbox\Parameters\Checker as ParametersChecker;
+use Omissis\Toolbox\Parameters\Checker as ParametersChecker;
 
 /**
  * Abstract common config class for Rackspace Cloudfiles classes
