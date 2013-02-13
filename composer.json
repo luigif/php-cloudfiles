@@ -1,25 +1,27 @@
 {
     "name": "omissis/php-cloudfiles",
-    "type": "http",
-    "description": "cloudfiles interface library",
-    "keywords": ["rackspace", "cloudfiles", "http", "client"],
-    "homepage": "http://www.rackspace.com/",
+    "type": "library",
+    "description": "PHP language bindings for Cloud Files API",
+    "keywords": ["Rackspace", "Cloud Files", "RSCF", "PHP"],
+    "homepage": "https://github.com/omissis/php-cloudfiles",
     "authors": [
         {
-            "name": "Eric 'EJ' Johnson",
-            "email": "ej@racklabs.com"
+            "name": "Rackspace",
+            "homepage": "http://www.rackspacecloud.com"
         },
         {
-            "name": "Claudio Beatrice",
-            "email": "claudi0.beatric3@gmail.com"
-        },
-        {
-            "name": "Marco Vito Moscaritolo",
-            "email": "mavimo@gmail.com"
+            "name": "Community contributors",
+            "homepage": "https://github.com/rackspace/php-cloudfiles/graphs/contributors"
         }
     ],
     "require": {
-        "php": ">=5.3.2"
+        "php": ">=5.3.0",
+        "ext-curl": "*",
+        "ext-fileinfo": "*",
+        "ext-mbstring": "*"
     },
-    "include-path": ["."]
+    "autoload": {
+        "files": ["cloudfiles.php"]
+    },
+    "include_path" : ["."]
 }
