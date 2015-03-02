@@ -1,9 +1,9 @@
 {
-    "name": "omissis/php-cloudfiles",
+    "name": "brightlocal/php-cloudfiles",
     "type": "library",
     "description": "PHP language bindings for Cloud Files API",
     "keywords": ["Rackspace", "Cloud Files", "RSCF", "PHP"],
-    "homepage": "https://github.com/omissis/php-cloudfiles",
+    "homepage": "https://github.com/BrightLocal/php-cloudfiles",
     "authors": [
         {
             "name": "Rackspace",
