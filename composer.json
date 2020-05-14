@@ -1,5 +1,5 @@
 {
-    "name": "rackspace/cloudfiles",
+    "name": "luigif/cloudfiles",
     "type": "library",
     "description": "PHP language bindings for Rackspace Cloud Files API",
     "keywords": ["Rackspace", "Cloud Files", "RSCF", "PHP"],
