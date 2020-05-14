@@ -1,9 +1,9 @@
 {
-    "name": "brightlocal/php-cloudfiles",
+    "name": "luigif/php-cloudfiles",
     "type": "library",
     "description": "PHP language bindings for Cloud Files API",
     "keywords": ["Rackspace", "Cloud Files", "RSCF", "PHP"],
-    "homepage": "https://github.com/BrightLocal/php-cloudfiles",
+    "homepage": "https://github.com/luigif/php-cloudfiles",
     "authors": [
         {
             "name": "Rackspace",
@@ -21,6 +21,9 @@
         "ext-mbstring": "*"
     },
     "autoload": {
+        "psr-4": {
+            "luigif\\Cloudfiles\\": "cloudfiles.php"
+        },
         "files": ["cloudfiles.php"]
     },
     "include_path" : ["."]
