@@ -1,4 +1,7 @@
 <?php
+
+namespace Rackspace\Cloudfiles;
+
 /**
  * This is the PHP Cloud Files API.
  *
