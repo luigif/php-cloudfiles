@@ -1,4 +1,7 @@
 <?php
+
+namespace Rackspace\Cloudfiles;
+
 /**
  * This is an HTTP client class for Cloud Files.  It uses PHP's cURL module
  * to handle the actual HTTP request/response.  This is NOT a generic HTTP
@@ -552,7 +555,7 @@ class CF_Http
         if ($return_code == 204) {
             return array($return_code,$this->response_reason,
                 $this->_account_container_count, $this->_account_bytes_used,
-                $this->_account_key, $this->account_metadata);
+                $this->_account_key, $this->_account_metadata);
         }
         return array($return_code,$this->response_reason,0,0, NULL, array());
     }
