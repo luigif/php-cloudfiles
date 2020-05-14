@@ -1,7 +1,7 @@
 {
-    "name": "luigif/php-cloudfiles",
+    "name": "rackspace/cloudfiles",
     "type": "library",
-    "description": "PHP language bindings for Cloud Files API",
+    "description": "PHP language bindings for Rackspace Cloud Files API",
     "keywords": ["Rackspace", "Cloud Files", "RSCF", "PHP"],
     "homepage": "https://github.com/luigif/php-cloudfiles",
     "authors": [
